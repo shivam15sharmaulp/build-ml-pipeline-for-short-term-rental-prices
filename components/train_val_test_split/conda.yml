@@ -8,6 +8,6 @@ dependencies:
   - requests=2.24.0
   - scikit-learn=1.7.2
   - pip:
-      - mlflow==3.3.2
+      - mlflow==3.11.1
       - wandb==0.21.3
       - -e ..

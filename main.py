@@ -6,6 +6,7 @@ import os
 import wandb
 import hydra
 from omegaconf import DictConfig
+from sklearn.model_selection import train_test_split
 
 _steps = [
     "download",
@@ -16,12 +17,13 @@ _steps = [
     # NOTE: We do not include this in the steps so it is not run by mistake.
     # You first need to promote a model export to "prod" before you can run this,
     # then you need to run this step explicitly
-#    "test_regression_model"
+    #    "test_regression_model"
 ]
 
 
 # This automatically reads in the configuration
-@hydra.main(version_base=None, config_name='config', config_path='.')  # Adding version_base for Python 3.13 compatibility
+# Adding version_base for Python 3.13 compatibility
+@hydra.main(version_base=None, config_name='config', config_path='.')
 def go(config: DictConfig):
 
     # Setup the wandb experiment. All runs will be grouped under this name
@@ -53,26 +55,46 @@ def go(config: DictConfig):
             ##################
             # Implement here #
             ##################
-            pass
+            _ = mlflow.run(os.path.join(hydra.utils.get_original_cwd(), "src/basic_cleaning"), "main", parameters={
+                "input_artifact": "sample.csv:latest",
+                "output_artifact": "clean_sample.csv",
+                "output_type": "clean_data",
+                "output_description": "Cleaned data with outliers removed and last_review converted to datetime",
+                "min_price": config["etl"]["min_price"],
+                "max_price": config["etl"]["max_price"],
+            })
 
         if "data_check" in active_steps:
             ##################
             # Implement here #
             ##################
-            pass
+
+                _ = mlflow.run(os.path.join(hydra.utils.get_original_cwd(), "src/data_check"), "main", parameters={
+                    "csv": "clean_sample.csv:latest",
+                    "ref": "clean_sample.csv:reference",
+                    "kl_threshold": config["data_check"]["kl_threshold"],
+                    "min_price": config["etl"]["min_price"],
+                    "max_price": config["etl"]["max_price"],
+                })
 
         if "data_split" in active_steps:
             ##################
             # Implement here #
             ##################
-            pass
+            _ = mlflow.run(f"{config['main']['components_repository']}/train_val_test_split", "main", env_manager="conda", parameters={
+                "input": "clean_sample.csv:latest",
+                "test_size": config["modeling"]["test_size"],
+                "random_seed": config["modeling"]["random_seed"],
+                "stratify_by": config["modeling"]["stratify_by"], })
 
         if "train_random_forest" in active_steps:
 
             # NOTE: we need to serialize the random forest configuration into JSON
             rf_config = os.path.abspath("rf_config.json")
             with open(rf_config, "w+") as fp:
-                json.dump(dict(config["modeling"]["random_forest"].items()), fp)  # DO NOT TOUCH
+                # DO NOT TOUCH
+                json.dump(
+                    dict(config["modeling"]["random_forest"].items()), fp)
 
             # NOTE: use the rf_config we just created as the rf_config parameter for the train_random_forest
             # step
@@ -81,7 +103,16 @@ def go(config: DictConfig):
             # Implement here #
             ##################
 
-            pass
+            _ = mlflow.run(os.path.join(hydra.utils.get_original_cwd(), "src/train_random_forest"), "main", parameters={
+                "trainval_artifact": "trainval_data.csv:latest",
+                "output_artifact": "random_forest_export",
+                "val_size": config["modeling"]["val_size"],
+                "random_seed": config["modeling"]["random_seed"],
+                "stratify_by": config["modeling"]["stratify_by"],
+                "max_tfidf_features": config["modeling"]["max_tfidf_features"],
+                "rf_config": rf_config
+            })
+            
 
         if "test_regression_model" in active_steps:
 
@@ -89,7 +120,9 @@ def go(config: DictConfig):
             # Implement here #
             ##################
 
-            pass
+            _ = mlflow.run(f"{config['main']['components_repository']}/test_regression_model", "main", env_manager="conda", parameters={
+                "mlflow_model": "random_forest_export:prod",
+                "test_dataset": "test_data.csv:latest", })
 
 
 if __name__ == "__main__":
