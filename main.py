@@ -1,3 +1,5 @@
+""" This is the main file of the project. It contains the implementation of the main function that runs the whole pipeline. The pipeline is defined as a sequence of steps, and each step corresponds to a component that we have implemented. The steps are executed in order, and each step takes as input the output of the previous step. The steps are defined in the `_steps` variable, and you can choose which steps to execute by passing a comma-separated list of steps to the `steps` parameter in the configuration file. For example, if you want to execute only the download and basic_cleaning steps, you can set `steps: download,basic_cleaning` in the config.yaml file. If you want to execute all the steps, you can set `steps: all`. Note that some steps depend on the output of previous steps, so make sure to execute them in the correct order.
+"""
 import json
 
 import mlflow
@@ -69,13 +71,13 @@ def go(config: DictConfig):
             # Implement here #
             ##################
 
-                _ = mlflow.run(os.path.join(hydra.utils.get_original_cwd(), "src/data_check"), "main", parameters={
-                    "csv": "clean_sample.csv:latest",
-                    "ref": "clean_sample.csv:reference",
-                    "kl_threshold": config["data_check"]["kl_threshold"],
-                    "min_price": config["etl"]["min_price"],
-                    "max_price": config["etl"]["max_price"],
-                })
+            _ = mlflow.run(os.path.join(hydra.utils.get_original_cwd(), "src/data_check"), "main", parameters={
+                "csv": "clean_sample.csv:latest",
+                "ref": "clean_sample.csv:reference",
+                "kl_threshold": config["data_check"]["kl_threshold"],
+                "min_price": config["etl"]["min_price"],
+                "max_price": config["etl"]["max_price"],
+            })
 
         if "data_split" in active_steps:
             ##################
@@ -112,7 +114,6 @@ def go(config: DictConfig):
                 "max_tfidf_features": config["modeling"]["max_tfidf_features"],
                 "rf_config": rf_config
             })
-            
 
         if "test_regression_model" in active_steps:
 

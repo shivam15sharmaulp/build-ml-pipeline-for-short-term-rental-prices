@@ -1,3 +1,6 @@
+""" This file is for testing the data after basic cleaning. You can add more tests here, but make sure to run them in the test stage of the pipeline (and not in the test stage of the training step, which is for testing the model performance on unseen data).
+"""
+
 import pandas as pd
 import numpy as np
 import scipy.stats
@@ -24,10 +27,12 @@ def test_column_names(data):
         "availability_365",
     ]
 
-    these_columns = data.columns.to_numpy()  # Using to_numpy() for better performance
+    # Using to_numpy() for better performance
+    these_columns = data.columns.to_numpy()
 
     # This also enforces the same order
-    assert np.array_equal(expected_colums, these_columns)  # Using numpy comparison for better performance
+    # Using numpy comparison for better performance
+    assert np.array_equal(expected_colums, these_columns)
 
 
 def test_neighborhood_names(data):
@@ -44,7 +49,8 @@ def test_proper_boundaries(data: pd.DataFrame):
     """
     Test proper longitude and latitude boundaries for properties in and around NYC
     """
-    idx = data['longitude'].between(-74.25, -73.50) & data['latitude'].between(40.5, 41.2)
+    idx = data['longitude'].between(-74.25, -
+                                    73.50) & data['latitude'].between(40.5, 41.2)
 
     assert np.sum(~idx) == 0
 
@@ -76,4 +82,3 @@ def test_price_range(data, min_price, max_price):
     Test that the price values are between min_price and max_price
     """
     assert data['price'].between(min_price, max_price).all()
-    
