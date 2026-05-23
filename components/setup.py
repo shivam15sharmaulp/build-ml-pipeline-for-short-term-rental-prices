@@ -5,6 +5,7 @@ setup(
     name="wandb-utils",
     version="0.1",
     description="Utilities for interacting with Weights and Biases and mlflow",
+    author="Shivam Sharma",
     zip_safe=False,  # avoid eggs, which make the handling of package data cumbersome
     packages=["wandb_utils"],
     python_requires='>=3.13',
