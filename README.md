@@ -45,9 +45,11 @@ Those scores come from the production-model regression test tracked in the repos
 
 W&B artifact graph for the pipeline:
 
-![Pipeline graph](images/wandb-pipeline-graph.png)
+![W&B data lineage](images/data-lineage-wandb.png)
 
 Example of model selection and experiment review in W&B:
+
+![Metric comparison NYC Airbnb](images/metric-comparison-nyc-airbnb.png)
 
 ![W&B model selection](images/wandb_select_best.gif)
 
